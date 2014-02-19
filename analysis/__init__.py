@@ -16,3 +16,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with P0010.5.  If not, see <http://www.gnu.org/licenses/>.
 """
+
+import sys
+
+# Determine experiment and make available to other modules. The experiments also
+# had different display resolutions.
+if 'exp1' in sys.argv:
+	exp = 'exp1'
+	w, h = 1280, 1024
+elif 'exp2' in sys.argv:
+	exp = 'exp2'
+	w, h = 1024, 768
+elif 'exp3' in sys.argv:
+	exp = 'exp3'
+	w, h = 1280, 1024
+else:
+	raise Exception('You must specify an experiment!')
