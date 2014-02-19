@@ -395,11 +395,30 @@ def loadPlotSalFrom(dm):
 
 	assert(analysis.exp in ['exp3', 'exp3.matched'])
 	# LME
-	R.load(dm)
-	_dm = R.lmer('salFrom ~ cond + (1|file) + (1|scene)', nsim=nsim)
+	stats.R.load(dm)
+	_dm = stats.R.lmer('salFrom ~ cond + (1|file) + (1|scene)', nsim=stats.nsim)
 	_dm.save('output/%s/salFrom.cond.csv' % analysis.exp)
 	print _dm
-	# Plot
+
+	plot.new()
+	y1 = dm.select('cond == "single"')['salFrom'].mean()
+	y2 = dm.select('cond == "dual"')['salFrom'].mean()
+	my = .5*(y1 + y2)
+	dy = y2 - y1
+	y1A = my + .5 * _dm['ci95up'][1]
+	y1B = my + .5 * _dm['ci95lo'][1]
+	y2A = my - .5 * _dm['ci95up'][1]
+	y2B = my - .5 * _dm['ci95lo'][1]
+	plt.bar(0, y1, color=green[1])
+	plt.plot([.4, .4], [y1A, y1B], '-', color='black')
+	plt.bar(1, y2, color=orange[1])
+	plt.plot([1.4, 1.4], [y2A, y2B], '-', color='black')
+	plt.ylim(13, 16)
+	plt.xlim(-.5, 2.3)
+	plt.xticks([.4, 1.4], ['Single', 'Dual'])
+	plt.ylabel('Saliency (arbitrary units)')
+	plot.save('barPlotSalFrom', show=True)
+	# Saccade number plot
 	plot.new()
 	_dm = dm.select('cond == "single"')
 	salFromPlot(_dm, standalone=False, color=green[1], label='Single')
