@@ -32,3 +32,5 @@ elif 'exp3' in sys.argv:
 	w, h = 1280, 1024
 else:
 	raise Exception('You must specify an experiment!')
+
+manuscriptTablesFolder = 'manuscript/tables/'

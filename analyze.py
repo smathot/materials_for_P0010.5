@@ -19,9 +19,9 @@ along with P0010.5.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import sys
-from analysis import helpers
+from analysis import helpers, exp
 dm = helpers.getDataMatrix()
-dm = helpers.filter(dm)
+dm = helpers.filter(dm, cacheId='filter.%s' % exp)
 for i in sys.argv:
 	if hasattr(helpers, i):
 		retval = getattr(helpers, i)(dm)
