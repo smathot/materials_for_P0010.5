@@ -15,15 +15,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with P0010.5.  If not, see <http://www.gnu.org/licenses/>.
+along with P0010.5.  If not, see <http://www.gnu.o#!/bin/basjhrg/licenses/>.
 """
 
 import sys
-from analysis import helpers, exp
-dm = helpers.getDataMatrix()
-dm = helpers.filter(dm, cacheId='filter.%s' % exp)
-for i in sys.argv:
-	if hasattr(helpers, i):
-		retval = getattr(helpers, i)(dm)
-		if retval != None:
-			dm = retval
+from exparser import Tools
+from analysis import helpers, helpersExp1, helpersExp2, helpersExp3, \
+	constants, helpersCrossExp
+dm = helpers.getDataMatrix(cacheId='data.%s' % constants.exp)
+dm = helpers.filter(dm, cacheId='filter.%s' % constants.exp)
+Tools.analysisLoop(dm, mods=[helpers, helpersExp1, helpersExp2, helpersExp3,
+	helpersCrossExp])

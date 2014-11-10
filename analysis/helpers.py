@@ -17,317 +17,38 @@ You should have received a copy of the GNU General Public License
 along with P0010.5.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import sys
-import warnings
-import numpy as np
+from constants import *
+from analysis import stats
+from exparser import Plot
 from exparser.Cache import cachedDataMatrix
-from exparser.CsvReader import CsvReader
-from exparser.PivotMatrix import PivotMatrix
-from exparser.TangoPalette import *
 from matplotlib import pyplot as plt
-import analysis
-from analysis import plot, stats
-# Direct import so that we can invoke it from the command line
-from analysis.stats import modelBuild, matchCond, modelTables
-
-# The maximum saccade number to include in masterplot (production value=20)
-maxSacc = 20
-# The range of displacements for `windowPlot()`
-windowRange = range(-5, 6)
-# The upper and lower limit for the slope axis in the plots
-slopeLim = -.011, .006
-# Line colors
-exp1Col = blue[1]
-exp2Col = orange[1]
-exp3SingleCol = green[2]
-exp3DualCol = red[2]
-fractalCol = orange[1]
-sceneCol = orange[2]
-# Indicates whether the plots should be shown
-show = '--show' in sys.argv
-
-def _exp1(dm):
-
-	"""Performs the full analysis for experiment 1."""
-
-	assert(analysis.exp == 'exp1')
-	# Generic
-	masterPlot(dm)
-	pupilSizePlot(dm)
-	salFromPlot(dm)
-	windowPlot(dm)
-
-def _exp2(dm):
-
-	"""Performs the full analysis for experiment 2."""
-
-	assert(analysis.exp == 'exp2')
-	# Generic
-	masterPlot(dm)
-	pupilSizePlot(dm)
-	salFromPlot(dm)
-	windowPlot(dm)
-	# Experiment specific
-	instructionPlot(dm)
-	instructionPlotPupilSize(dm)
-	instructionPlotSalFrom(dm)
-
-def _exp3(dm):
-
-	"""Performs the full analysis for experiment 3."""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-	# Generic
-	masterPlot(dm)
-	pupilSizePlot(dm)
-	salFromPlot(dm)
-	windowPlot(dm)
-	# Experiment specific
-	loadPerf(dm)
-	loadPlot(dm)
-	loadPlotPupilSize(dm)
-	loadPlotSalFrom(dm)
-	loadPlotWindow(dm)
-
-def betweenSubjectsCorr(dm):
-
-	"""
-	Analyzes the difference in the relationship between pupil size and saliency
-	between load conditions using a between-subjects comparison of correlations.
-
-	Note: Only applicable to exp3.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-	from scipy.stats import linregress, ttest_rel, ttest_1samp
-	print 'subject\tcond\tr\tp'
-	rSingle = []
-	rDual = []
-	for _dm in dm.group(['file', 'cond']):
-		subject = _dm['file'][0]
-		cond = _dm['cond'][0]
-		#s, i, r, p, se = linregress(_dm['pupilSize'], _dm['salFrom'])
-		stats.R.load(_dm)
-		lm = stats.R.lmer( \
-			'salFrom ~ trialId + saccNr + lumFrom + fromX + fromY + iSacc + size + pupilSize + (1|scene)', \
-			nsim=stats.nsim, pvals=modelPvals)
-		r = lm['est'][-1]
-		p = lm['p'][-1]
-		print '%s\t%s\t%.4f\t%.4f' % (subject, cond, r, p)
-		if cond == 'single':
-			rSingle.append(r)
-		else:
-			rDual.append(r)
-	t, p = ttest_rel(rSingle, rDual)
-	print 'Difference: t = %.4f, p = %.4f' % (t, p)
-	t, p = ttest_1samp(rSingle, 0)
-	print 'Single: t = %.4f, p = %.4f' % (t, p)
-	t, p = ttest_1samp(rDual, 0)
-	print 'Dual: t = %.4f, p = %.4f' % (t, p)
-	plot.new()
-	plt.plot(rSingle, 'o-', label='single', color=exp3SingleCol)
-	plt.plot(rDual, 'o-', label='dual', color=exp3DualCol)
-	plt.axhline(0, linestyle='--', color='black')
-	plt.xlabel('Subject #')
-	plt.ylabel('Partial effect of pupil size')
-	plt.legend(frameon=False)
-	plot.save('between-subjects', show=show)
-
-def crossExp(dm):
-
-	"""
-	Performs a cross-experimental analysis, calculating the partial effect of
-	pupilSize on salFrom for exp 1, exp2, exp 3 (single), and exp 3 (dual).
-
-	Note: This should be called as the last part of the chain and requires
-	exp 1.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	# Has to be called as the final analysis for exp 1
-	assert(analysis.exp == 'exp1')
-	assert('crossExp' == sys.argv[-1])
-
-	# The window plot. This only includes Experiment 1 and 2.
-	plot.new()
-	windowPlot(dm, standalone=False, color=exp1Col, label='Exp. 1 (N = %d)' \
-		% len(dm))
-	analysis.exp = 'exp2'
-	dm = filter(getDataMatrix())
-	windowPlot(dm, standalone=False, color=exp2Col, label= \
-		'Exp. 2 (N = %d)' % len(dm))
-	plt.legend(frameon=False, loc='lower left')
-	analysis.exp = 'expCross'
-	plot.save('windowPlot', show=show)
-
-	# The saccade number plot. This only includes Experiment 1 and 2.
-	analysis.exp = 'exp1'
-	dm = filter(getDataMatrix())
-	plot.new()
-	masterPlot(dm, standalone=False, color=exp1Col, label='Exp. 1 (N = %d)' \
-		% len(dm))
-	analysis.exp = 'exp2'
-	dm = filter(getDataMatrix())
-	masterPlot(dm, standalone=False, color=exp2Col, label= \
-		'Exp. 2 (N = %d)' % len(dm))
-	plt.legend(frameon=False, loc='lower right')
-	analysis.exp = 'expCross'
-	plot.save('saccNrPlot', show=show)
-
-	# Now the main master plot, which consists of four bars depicting Exp 1,
-	# Exp 2, Exp 3 (dual) and Exp 3 (single)
-	plot.new(size=plot.s)
-
-	# Exp 1
-	analysis.exp = 'exp1'
-	dm = filter(getDataMatrix())
-
-	s, p, lo, up = stats.effectSlope(dm)
-	plt.bar(0, s, edgecolor='black', color=exp1Col, width=.8)
-	plt.plot([.4, .4], [lo, up], '-', color='black')
-
-	# Exp 2
-	analysis.exp = 'exp2'
-	dm = filter(getDataMatrix())
-	s, p, lo, up = stats.effectSlope(dm)
-	plt.bar(1, s, edgecolor='black', color=exp2Col, width=.8)
-	plt.plot([1.4, 1.4], [lo, up], '-', color='black')
-
-	# Exp 3, separately for single and dual cond
-	analysis.exp = 'exp3'
-	dm = filter(getDataMatrix())
-	_dm = dm.select('cond == "single"')
-	s, p, lo, up = stats.effectSlope(_dm)
-	print s, p, lo, up
-	plt.bar(2, s, edgecolor='black', color=exp3SingleCol, width=.8)
-	plt.plot([2.4, 2.4], [lo, up], '-', color='black')
-	_dm = dm.select('cond == "dual"')
-	s, p, lo, up = stats.effectSlope(_dm)
-	print s, p, lo, up
-	plt.bar(3, s, edgecolor='black', color=exp3DualCol, width=.8)
-	plt.plot([3.4, 3.4], [lo, up], '-', color='black')
-	plt.axhline(linestyle='--', color='black')
-	plt.xticks( [.4, 1.4, 2.4, 3.4], ['Exp. 1', 'Exp. 2', 'Exp. 3 (single)', \
-		'Exp 3. (dual)'])
-	plt.xlim(-.5, 4.3)
-	plt.xlabel('Experiment')
-	plt.yticks([-.004, -.002, 0])
-	plt.ylim(-.006, .001)
-	plt.ylabel('Partial slope')
-
-	analysis.exp = 'expCross'
-	plot.save('masterPlot', show=show)
-
-def descriptives(dm, select=None):
-
-	"""
-	Provides descriptive information about trial length and fixation duration.
-
-	Arguments:
-	dm		--	A DataMatrix.
-
-	Keyword arguments:
-	select	--	A select statement to provide descriptives for a subset of the
-				data. (default=None)
-	"""
-
-	# Determine fixation duration
-	a = np.loadtxt('data/%s.fixdur.csv' % analysis.exp)
-	i = np.where(a < a.std() * 5)[0]
-	print len(a), len(i)
-	a = a[i]
-	print 'Fixation duration: M = %.2f ms, SD = %.2f' % (a.mean(), a.std())
-	plt.subplot(211)
-	plt.title('Fixation duration')
-	plt.hist(a, bins=100)
-	plt.axvline(a.mean(), linestyle='--', color='black')
-	# Determine display duration, which is equal to the RT.
-	if analysis.exp == 'exp3':
-		dv = 'search_rt'
-	else:
-		dv = 'rt'
-	_dm = CsvReader('data/%s.data.csv' % analysis.exp).dataMatrix()
-	l = []
-	for rt in _dm[dv]:
-		try:
-			l.append(float(rt))
-		except:
-			pass
-	a = np.array(l, dtype=float)
-	print 'Trial duration: M = %.2f ms, SD = %.2f' % (a.mean(), a.std())
-	plt.subplot(212)
-	plt.title('Trial duration')
-	plt.hist(a, bins=100)
-	plt.axvline(a.mean(), linestyle='--', color='black')
-	plt.show()
-
-def dvPlot(dm, dv, standalone=True, color=blue[1], label=None):
-
-	"""
-	Plots a dependent measure as a function of saccade number.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	dv		--	The dependent variable.
-
-	Keyword arguments:
-	standalone	--	Indicates whether this is a standalone plot, in which case
-					it will create and save the plot, or not. (default=True)
-	color		--	Plot color. (default=blue[1])
-	label		--	Line label. (default=None)
-	"""
-
-	assert(dv in dm.columns())
-	if standalone:
-		plot.new()
-	xData = []
-	yData = []
-	eData = []
-	for saccNr in [None] + range(1, maxSacc+1):
-		if saccNr == None:
-			_dm = dm
-		else:
-			_dm = dm.select('saccNr == %d' % saccNr)
-		y = _dm[dv].mean()
-		e = _dm[dv].std() / np.sqrt(len(_dm))
-		if saccNr == None:
-			plt.errorbar(-2, y, yerr=[e], fmt='o-', color=color)
-		else:
-			xData.append(saccNr)
-			yData.append(y)
-			eData.append(e)
-	xData = np.array(xData)
-	yData = np.array(yData)
-	eData = np.array(eData)
-	plt.fill_between(xData, yData-eData, yData+eData, color=color, alpha=.25)
-	plt.plot(xData, yData, 'o-', color=color, label=label)
-	plt.axhline(0, linestyle='--', color='black')
-	plt.xlabel('Saccade number')
-	plt.ylabel(dv)
-	plt.xlim(-2.5, maxSacc+.5)
-	if standalone:
-		plot.save('dvPlot.%s' % dv, show=show)
+import numpy as np
 
 @cachedDataMatrix
 def filter(dm):
 
 	"""
-	Filters the DataMatrix.
+	desc:
+		Filters and pre-processes the data.
 
-	Returns:
-	A DataMatrix.
+	arguments:
+		dm:
+			desc:	Data.
+			type:	DataMatrix
+
+	returns:
+		desc:	Data.
+		type:	DataMatrix
 	"""
 
+	# For expAll, the data has already been filtered
+	if exp == 'expAll':
+		return dm
 	# Remove practice trials for exp 3
-	if analysis.exp in ['exp3', 'exp3.matched']:
+	if exp == 'exp3':
 		dm = dm.select('trialId > 3')
 	# For exp 2, add the sceneType information
-	if analysis.exp == 'exp2':
+	if exp == 'exp2':
 		print 'Adding sceneType information ...'
 		dm = dm.addField('sceneType', dtype=str)
 		for i in dm.range():
@@ -341,445 +62,90 @@ def filter(dm):
 	# account PI. We can just square it and then turn it way down so the values
 	# don't become too high. There are also some artefacts in the pupil size
 	# measurements of exp 3, notably
-	if analysis.exp == 'exp3':
-		dm = dm.selectByStdDev([], 'pupilSize', 3.)
-		dm = dm.addField('pupilDiam', dtype=np.float64)
-		dm['pupilDiam'] = dm['pupilSize']
-		dm['pupilSize'] = (.008*dm['pupilSize'])**2
-
+	dm = dm.selectByStdDev([], 'pupilSize', 3.)
+	if pupilMode == 'area':
+		if exp == 'exp3':
+			dm = dm.addField('pupilDiam', dtype=np.float64)
+			dm['pupilDiam'] = dm['pupilSize']
+			dm['pupilSize'] = (.008*dm['pupilSize'])**2
+	elif pupilMode == 'diameter':
+		if exp != 'exp3':
+			dm['pupilSize'] = np.sqrt(dm['pupilSize'])
+	else:
+		raise Exception('Invalid pupilMode: %s' % pupilMode)
+	# Add different pupil size transforms
+	for m in range(1, 7):
+		dm = dm.addField('pupilSize%d' % m, dtype=float)
+	dm['pupilSize1'] = dm['pupilSize']
+	dm['pupilSize2'] = dm['pupilSize'] ** 2.
+	dm['pupilSize3'] = dm['pupilSize'] ** 3.
+	dm['pupilSize4'] = dm['pupilSize'] ** .5
+	dm['pupilSize5'] = dm['pupilSize'] ** -1
+	dm['pupilSize6'] = np.log(dm['pupilSize'])
+	dm['pupilSize'] = dm[pupilTransform]
+	if pupilZTransform:
+		print('Before Z transform: M = %.4f, SD = %.4f' \
+			% (dm['pupilSize'].mean(), dm['pupilSize'].std()))
+		dm['pupilSize'] -= dm['pupilSize'].mean()
+		dm['pupilSize'] /= dm['pupilSize'].std()
+		print('After Z transform: M = %.4f, SD = %.4f' \
+			% (dm['pupilSize'].mean(), dm['pupilSize'].std()))
 	# Add eccentricity columns
 	print 'Adding eccentricity information ...'
 	dm = dm.addField('eccFrom', dtype=float)
-	dm['eccFrom'] = np.sqrt( (dm['fromX']-analysis.w/2.)**2 + \
-		(dm['fromY']-analysis.h/2.)**2)
+	dm['eccFrom'] = np.sqrt( (dm['fromX']-w/2.)**2 + \
+		(dm['fromY']-h/2.)**2)
 	dm = dm.addField('eccTo', dtype=float)
-	dm['eccTo'] = np.sqrt( (dm['toX']-analysis.w/2.)**2 + \
-		(dm['toY']-analysis.h/2.)**2)
+	dm['eccTo'] = np.sqrt( (dm['toX']-w/2.)**2 + \
+		(dm['toY']-h/2.)**2)
 	print 'Done'
-	dm.save('cache/%s.filtered.csv' % analysis.exp)
 	return dm
 
+@cachedDataMatrix
 def getDataMatrix():
 
 	"""
-	Reads the data for the current experiment.
+	desc:
+		Reads the data for the current experiment.
 
-	Returns:
-	A DataMatrix.
+	returns:
+		desc:	Data.
+		type:	DataMatrix
 	"""
 
 	print 'Reading ...'
-	dm = CsvReader('data/%s.fix.csv' % analysis.exp).dataMatrix()
+	dm = CsvReader('data/%s.fix.csv' % exp).dataMatrix()
 	print 'N = %d' % len(dm)
 	print 'Done'
 	return dm
 
-def loadHist(dm):
+def saccadePlot(dm, standalone=True, color=blue[1], label=None):
 
 	"""
-	Shows distribution plots of saccNr, pupilSize, and salFrom for the single
-	and dual-task conditions.
+	desc:
+		Creates a graph in which the effect of pupil size on saliency is shown
+		separately for each saccade in a trial.
 
-	Note: This is only applicable for experiment 3.
+	arguments:
+		dm:
+			desc:	Data
+			type:
 
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-
-	plot.new(size=plot.hi)
-
-	dmSingle = dm.select("cond == 'single'")
-	dmDual = dm.select("cond == 'dual'")
-
-	plt.subplot(3,1,1)
-	ySingle = []
-	yDual = []
-	for i in range(1, maxSacc+1):
-		ySingle.append(len(dmSingle.select('saccNr == %d' % i)))
-		yDual.append(len(dmDual.select('saccNr == %d' % i)))
-	plt.plot(ySingle, ',-', color=exp3SingleCol, label='Single')
-	plt.plot(yDual, ',-', color=exp3DualCol, label='Dual')
-	plt.title('N per saccNr')
-	plt.legend(frameon=False)
-
-	plt.subplot(3,1,2)
-	ySingle = []
-	yDual = []
-	for i in range(0,255):
-		ySingle.append(len(dmSingle.select('salFrom == %d' % i)))
-		yDual.append(len(dmDual.select('salFrom == %d' % i)))
-	plt.plot(ySingle, ',-', color=exp3SingleCol, label='Single')
-	plt.plot(yDual, ',-', color=exp3DualCol, label='Dual')
-	plt.title('N per salFrom')
-	plt.gca().set_yscale('log')
-	plt.legend(frameon=False)
-
-	plt.subplot(3,1,3)
-	plt.hist(dmSingle['_pupilSize'], bins=100, color=exp3SingleCol, label= \
-		'single', histtype='stepfilled', alpha=.5)
-	plt.hist(dmDual['_pupilSize'], bins=100, color=exp3DualCol, label='dual', \
-		histtype='stepfilled', alpha=.5)
-	plt.title('pupilSize')
-	plt.legend(frameon=False)
-
-	plot.save('loadHist', show=show)
-
-def instructionPlot(dm):
-
-	"""
-	Plots the effect of pupil size on saliency for different task instructions.
-
-	Note: This is only applicable for experiment 2.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp == 'exp2')
-	plot.new(size=plot.s)
-	for color, fmt, sceneType in [(fractalCol, 'o-', 'fractal'), (sceneCol, \
-		's:', 'scene')]:
-		lSlope = []
-		if sceneType == 'fractal':
-			x = -.1
-		else:
-			x = .1
-		lX = []
-		for inst in ['free', 'search', 'memory']:
-			lX.append(x)
-			_dm = dm.select('inst == "%s"' % inst).select( \
-				'sceneType == "%s"' % sceneType)
-			s, p, lo, up = stats.effectSlope(_dm)
-			lSlope.append(s)
-			plt.plot([x, x], [lo, up], '-', color=color)
-			x += 1
-		plt.plot(lX, lSlope, fmt, color=color, label=sceneType.capitalize()+'s')
-	plt.xticks(range(0,3), ['Free', 'Search', 'Memory'])
-	plt.yticks([-.008, -0.004, 0, .004])
-	plt.ylabel('Partial slope')
-	plt.xlabel('Task')
-	plt.xlim(-.5, 2.5)
-	plt.ylim(slopeLim)
-	plt.axhline(0, color='black', linestyle='--')
-	plt.legend(frameon=False, loc='upper left')
-	plot.save('instructionPlot', show=show)
-
-def interactionAnalysis(dm):
-
-	"""
-	Performs the interactive analysis for Experiment 3.
-
-	Note: This is only applicable to experiment 3.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-
-	lfe = stats.fixedEffects()
-	lfe.append('pupilSize:cond')
-	stats.R.load(dm)
-	f = '%s ~ %s + %s + %s' % (stats.dv, ' + '.join(lfe), stats.iv, \
-		stats.modelRandomEffects)
-	lm = stats.R.lmer(f, pvals=stats.modelPvals, nsim=stats.nsim)
-	lm._print(sign=5)
-	stats.formatDm(dm, lm).save('%s/interaction.partial.csv' \
-		% analysis.manuscriptTablesFolder)
-
-	lfe = stats.fixedEffects()
-	lfe.append('pupilSize:cond')
-	lfe.remove('trialId')
-	lfe.remove('eccFrom')
-	stats.R.load(dm)
-	f = '%s ~ %s + %s + %s' % (stats.dv, ' + '.join(lfe), stats.iv, \
-		stats.modelRandomEffects)
-	lm = stats.R.lmer(f, pvals=stats.modelPvals, nsim=stats.nsim)
-	lm._print(sign=5)
-
-	#lfe = stats.fixedEffects()
-	#for fe in lfe:
-		#_lfe = lfe[:]
-		#_lfe.remove(fe)
-		#print 'Dropping %s' % fe
-		#f = '%s ~ %s + %s + %s' % (stats.dv, ' + '.join(_lfe), stats.iv, \
-			#stats.modelRandomEffects)
-		#lm = stats.R.lmer(f, pvals=stats.modelPvals, nsim=stats.nsim)
-		#lm._print(sign=5)
-
-	#for fe in lfe:
-		#_lfe = ['pupilSize/cond']
-		#_lfe.append(fe)
-		#print 'Adding %s' % fe
-		#f = '%s ~ %s + %s + %s' % (stats.dv, ' + '.join(_lfe), stats.iv, \
-			#stats.modelRandomEffects)
-		#lm = stats.R.lmer(f, pvals=stats.modelPvals, nsim=stats.nsim)
-		#lm._print(sign=5)
-
-	lfe = ['trialId', 'eccFrom', 'pupilSize/cond']
-	f = '%s ~ %s + %s + %s' % (stats.dv, ' + '.join(lfe), stats.iv, \
-		stats.modelRandomEffects)
-	lm = stats.R.lmer(f, pvals=stats.modelPvals, nsim=stats.nsim)
-	lm._print(sign=5)
-
-	lfe = ['pupilSize/cond']
-	f = '%s ~ %s + %s + %s' % (stats.dv, ' + '.join(lfe), stats.iv, \
-		stats.modelRandomEffects)
-	lm = stats.R.lmer(f, pvals=stats.modelPvals, nsim=stats.nsim)
-	lm._print(sign=5)
-	stats.formatDm(dm, lm).save('%s/interaction.direct.csv' \
-		% analysis.manuscriptTablesFolder)
-
-def loadCenterBias(dm):
-
-	"""
-	Plots the central bias as a function of load conditions.
-
-	Note: This is only applicable to experiment 3.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-	dmSingle = dm.select('cond == "single"')
-	dmDual = dm.select('cond == "dual"')
-	# Perform lmer
-	stats.R.load(dm)
-	lm = stats.R.lmer('eccFrom ~ cond + (1|file)', pvals=stats.modelPvals)
-	print lm
-	lm.save('output/exp3/eccFrom.csv')
-	lm = stats.R.lmer('eccFrom ~ %s + pupilSize + (1+pupilSize|file)' \
-		% '+'.join(['trialId', 'saccNr', 'lumFrom', 'eccFrom', 'fromX', \
-		'fromY', 'iSacc', 'size']), pvals=stats.modelPvals)
-	print lm
-	# Plot fixation heatmaps
-	plot.new(size=plot.hi)
-	plt.subplot(211)
-	plt.hexbin(dmSingle['fromX'], dmSingle['fromY'], gridsize=50)
-	plt.colorbar()
-	plt.xlim(0, 1280)
-	plt.ylim(0, 1024)
-	plt.subplot(212)
-	plt.hexbin(dmDual['fromX'], dmDual['fromY'], gridsize=50)
-	plt.colorbar()
-	plt.xlim(0, 1280)
-	plt.ylim(0, 1024)
-	plot.save('heatmaps', show=show)
-	# Plot eccentricity histograms
-	plot.new()
-	plt.hist(dmSingle['eccFrom'], bins=100, histtype='step', color=green[1])
-	plt.hist(dmDual['eccFrom'], bins=100, histtype='step', color=orange[1])
-	print 'eccFrom(single) = %.4f (%.4f)' % (dmSingle['eccFrom'].mean(), \
-		dmSingle['eccFrom'].std() / np.sqrt(len(dmSingle)))
-	print 'eccFrom(dual) = %.4f (%.4f)' % (dmDual['eccFrom'].mean(), \
-		dmDual['eccFrom'].std() / np.sqrt(len(dmDual)))
-	plt.xlabel('Eccentricity (px)')
-	plt.ylabel('N')
-	plot.save('eccFrom.cond', show=show)
-
-def loadPerf(dm):
-
-	"""
-	Analyzes the behavioral perform for the different memory-load conditions.
-
-	Note: This is only applicable to experiment 3.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-	# Process the visual-search performance. Due to a bug in the experiment,
-	# the actual response is not retrievable. However, we can retrieve RTs and
-	# whether a timeout occurred.
-	_dm = CsvReader('data/exp3.data.csv').dataMatrix()
-	_dm = _dm.addField('search_timeout', dtype=int)
-	_dm['search_timeout'][np.where(_dm['search_rt'] > 19999)] = 1
-	pm = PivotMatrix(_dm, ['cond'], ['subject_nr'], dv='search_timeout')
-	pm.save('output/exp3/searchTimeout.csv')
-	pm._print('Visual search timeout')
-	_dm = _dm.select('search_timeout == 0')
-	pm = PivotMatrix(_dm, ['cond'], ['subject_nr'], dv='search_rt')
-	pm.save('output/exp3/searchRT.csv')
-	pm._print('Visual search RTs (non-timeout only)')
-	# Process the digit count performance. We first need to do some recoding
-	# to make sure that the response is an int.
-	_dm = _dm.select('cond == "dual"', verbose=False)
-	_dm = _dm.addField('count_correct', dtype=int, default=0)
-	for i in _dm.range():
-		try:
-			int(_dm['count_response'][i])
-		except:
-			# If the response is not an int, it's definitely incorrect
-			continue
-		if int(_dm['count_response'][i]) == _dm['digitCount'][i]:
-			_dm['count_correct'][i] = 1
-	pm = PivotMatrix(_dm, ['subject_nr'], ['subject_nr'], dv='count_correct')
-	pm.save('output/exp3/countPerf.csv')
-	pm._print('Digit count performance (dual-task only)')
-
-def loadPlot(dm):
-
-	"""
-	Plots the effect of pupil size on saliency for different memory-load
-	conditions, where lines correspond to load conditions. Also builds optimal
-	models for the two conditions.
-
-	Note: This is only applicable to experiment 3.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-
-	_dm = dm.select('cond == "single"')
-	f = stats.formula(_dm, partial=False)
-	stats.R.load(_dm)
-	lm = stats.R.lmer(f, pvals=stats.modelPvals)
-	lm._print(sign=5)
-	lm.save('output/exp3/directModel.single.csv')
-
-	_dm = dm.select('cond == "dual"')
-	f = stats.formula(_dm, partial=False)
-	stats.R.load(dm.select('cond == "dual"'))
-	lm = stats.R.lmer(f, pvals=stats.modelPvals)
-	lm._print(sign=5)
-	lm.save('output/exp3/directModel.dual.csv')
-
-	# Build separate models for the two conditions
-	modelBuild(dm.select('cond == "single"'), suffix='.single')
-	modelBuild(dm.select('cond == "dual"'), suffix='.dual')
-
-	quit()
-
-	# Plot two masterplots in one plot
-	plot.new()
-	_dm = dm.select('cond == "single"')
-	masterPlot(_dm, standalone=False, color=green[1], label='Single')
-	_dm = dm.select('cond == "dual"')
-	masterPlot(_dm, standalone=False, color=orange[1], label='Dual')
-	plt.legend(frameon=False)
-	plot.save('loadPlot', show=show)
-
-def loadPlotPupilSize(dm):
-
-	"""
-	Creates pupil-size plots for the two load conditions, and performs an LME.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-	# LME
-	R.load(dm)
-	_dm = R.lmer('pupilSize ~ cond + %s' % stats.modelRandomEffects, \
-		nsim=nsim, pvals=stats.modelPvals)
-	_dm.save('output/%s/pupilSize.cond.csv' % analysis.exp)
-	print _dm
-	# Plot
-	plot.new()
-	_dm = dm.select('cond == "single"')
-	pupilSizePlot(_dm, standalone=False, color=green[1], label='Single')
-	_dm = dm.select('cond == "dual"')
-	pupilSizePlot(_dm, standalone=False, color=orange[1], label='Dual')
-	plt.legend(frameon=False)
-	plot.save('loadPlotPupilSize', show=show)
-
-def loadPlotSalFrom(dm):
-
-	"""
-	Creates saliency plots for the two load conditions, and performs an LME.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-	# LME
-	stats.R.load(dm)
-	_dm = stats.R.lmer('salFrom ~ cond + (1|file)', nsim=stats.nsim, pvals= \
-		stats.modelPvals)
-	_dm.save('output/%s/salFrom.cond.csv' % analysis.exp)
-	print _dm
-	a = dm.select('cond == "single"')['salFrom']
-	print 'single-task saliency: M = %.4f, SE = %.4f' % (a.mean(), \
-		a.std()/np.sqrt(len(a)))
-	a = dm.select('cond == "dual"')['salFrom']
-	print 'dual-task saliency: M = %.4f, SE = %.4f' % (a.mean(), \
-		a.std()/np.sqrt(len(a)))
-
-	return
-
-	plot.new()
-	y1 = dm.select('cond == "single"')['salFrom'].mean()
-	y2 = dm.select('cond == "dual"')['salFrom'].mean()
-	my = .5*(y1 + y2)
-	dy = y2 - y1
-	y1A = my + .5 * _dm['ci95up'][1]
-	y1B = my + .5 * _dm['ci95lo'][1]
-	y2A = my - .5 * _dm['ci95up'][1]
-	y2B = my - .5 * _dm['ci95lo'][1]
-	plt.bar(0, y1, color=green[1])
-	plt.plot([.4, .4], [y1A, y1B], '-', color='black')
-	plt.bar(1, y2, color=orange[1])
-	plt.plot([1.4, 1.4], [y2A, y2B], '-', color='black')
-	plt.ylim(13, 16)
-	plt.xlim(-.5, 2.3)
-	plt.xticks([.4, 1.4], ['Single', 'Dual'])
-	plt.ylabel('Saliency (arbitrary units)')
-	plot.save('barPlotSalFrom', show=show)
-	# Saccade number plot
-	plot.new()
-	_dm = dm.select('cond == "single"')
-	salFromPlot(_dm, standalone=False, color=green[1], label='Single')
-	_dm = dm.select('cond == "dual"')
-	salFromPlot(_dm, standalone=False, color=orange[1], label='Dual')
-	plt.legend(frameon=False)
-	plot.save('loadPlotSalFrom', show=show)
-
-def loadPlotWindow(dm):
-
-	"""
-	Creates a two-line window plot for each load condition
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp in ['exp3', 'exp3.matched'])
-	plot.new()
-	_dm = dm.select('cond == "single"')
-	windowPlot(_dm, standalone=False, color=green[1], label='Single')
-	_dm = dm.select('cond == "dual"')
-	windowPlot(_dm, standalone=False, color=red[1], label='Dual')
-	plt.legend(frameon=False)
-	plt.yticks([-.002, -0.001, 0])
-	plt.ylim(-.003, .001)
-	plot.save('loadPlotWindow', show=show)
-
-def masterPlot(dm, standalone=True, color=blue[1], label=None):
-
-	"""
-	Creates a graph in which the effect of pupil size on saliency is shown
-	separately for each saccade in a trial.
-
-	Arguments:
-	dm			--	A DataMatrix.
-
-	Keyword arguments:
-	standalone	--	Indicates whether this is a standalone plot, in which case
-					it will create and save the plot, or not. (default=True)
-	color		--	Plot color. (default=blue[1])
-	label		--	Line label. (default=None)
+	keywords:
+		standalone:
+			desc:	Indicates whether this is a standalone plot, in which case
+					it will create and save the plot, or not.
+			type:	bool
+		color:
+			desc:	Plot color.
+			type:	[str, unicode]
+		label:
+			desc:	Line label.
+			type:	[str, unicode]
 	"""
 
 	if standalone:
-		plot.new()
+		Plot.new(size=widePlot)
 	xData = []
 	yData = []
 	eData = []
@@ -792,11 +158,11 @@ def masterPlot(dm, standalone=True, color=blue[1], label=None):
 		if saccNr == None:
 			if standalone:
 				x = -1
-			elif analysis.exp == 'exp1':
+			elif exp == 'exp1':
 				x = -1.2
 			else:
 				x = -.8
-			plt.errorbar(x, s, yerr=[[s-lo], [up-s]], capsize=0, fmt='o-', \
+			plt.errorbar(x, s, yerr=[[s-lo], [up-s]], capsize=0, fmt='o-',
 				color=color)
 		else:
 			xData.append(saccNr)
@@ -812,65 +178,53 @@ def masterPlot(dm, standalone=True, color=blue[1], label=None):
 	plt.xlim(-2, maxSacc+1)
 	plt.xticks([-1]+range(1, 21), ['Full']+range(1, 21))
 	plt.ylabel('Partial slope')
-	plt.yticks([-.008, -0.004, 0, .004])
+	plt.yticks([0, 2, 4, 6])
 	plt.ylim(slopeLim)
 	if standalone:
-		plot.save('masterPlot', show=show)
-
-def pupilSizePlot(dm, **args):
-
-	"""Plots pupil size as a function of saccade number."""
-
-	dvPlot(dm, 'pupilSize', **args)
-
-def salFromPlot(dm, **args):
-
-	"""Plots saliency as a function of saccade number."""
-
-	dvPlot(dm, 'salFrom', **args)
+		Plot.save('saccadePlot', folder=exp, show=show)
 
 def windowPlot(dm, standalone=True, color=blue[1], label=None):
 
 	"""
-	Creates a graph in which the effect of pupil size on saliency is shown
-	separately for each temporal displacement. I.e. the effect of pupil size on
-	trial N on saliency on trial N+1, etc.
+	desc:
+		Creates a graph in which the effect of pupil size on saliency is shown
+		separately for each temporal displacement. I.e. the effect of pupil size
+		on trial N on saliency on trial N+1, etc.
 
-	Arguments:
-	dm		--	A DataMatrix.
+	arguments:
+		dm:
+			type:	DataMatrix
 
-	Keyword arguments:
-	standalone	--	Indicates whether this is a standalone plot, in which case
-					it will create and save the plot, or not. (default=True)
-	color		--	Plot color. (default=blue[1])
-	label		--	Line label. (default=None)
+	keywords:
+		standalone:
+			desc:	Indicates whether this is a standalone plot, in which case
+					it will create and save the plot, or not.
+			type:	bool
+		color:
+			desc:	Plot color.
+			type:	[str, unicode]
+		label:
+			desc:	Line label.
+			type:	[str, unicode]
 	"""
 
 	if standalone:
-		plot.new()
-	dm = dm.intertrialer(['file', 'trialId', 'saccNr'], stats.dv, \
+		Plot.new(widePlot)
+	dm = dm.intertrialer(['file', 'trialId', 'saccNr'], 'salFrom',
 		_range=windowRange)
 	xData = []
 	yData = []
 	eData = []
 	for r in windowRange:
 		if r == 0:
-			_dv = stats.dv
+			_dv = 'salFrom'
 		elif r < 0:
-			_dv = '%s_m%d' % (stats.dv, -1*r)
+			_dv = 'salFrom_m%d' % (-1*r)
 		else:
-			_dv = '%s_p%d' % (stats.dv, r)
+			_dv = 'salFrom_p%d' % r
 		print 'dv = %s' % _dv
-		s, p, lo, up = stats.effectSlope(dm, _dv=_dv)
+		s, t, lo, up = stats.effectSlope(dm, dv=_dv)
 		print s
-
-		if analysis.exp in ['exp3', 'exp3.matched'] and standalone:
-			f = '%s ~ %s + pupilSize*cond + %s' % (_dv, ' + '.join( \
-					stats.fixedEffects()), stats.modelRandomEffects)
-			print f
-			lm = stats.R.lmer(f, pvals=stats.modelPvals, nsim=stats.nsim)
-			lm._print('Interaction for %s' % _dv)
-
 		xData.append(r)
 		yData.append(s)
 		eData.append([lo, up])
@@ -883,144 +237,8 @@ def windowPlot(dm, standalone=True, color=blue[1], label=None):
 	plt.xlabel('Pupil-size timepoint relative to saliency timepoint')
 	plt.xticks(windowRange)
 	plt.xlim(windowRange[0], windowRange[-1])
-
 	plt.ylabel('Partial slope')
-	plt.yticks([-.004, -0.002, 0])
-	plt.ylim(-.006, .001)
-
+	#plt.yticks([-.004, -0.002, 0])
+	#plt.ylim(-.006, .001)
 	if standalone:
-		plot.save('windowPlot', show=show)
-
-def autoCorrelate(dm, d=1, dv='salFrom'):
-
-	"""
-	Determines the autocorrelation between variables.
-
-	Arguments:
-	dm		--	A DataMatrix.
-
-	Keyword arguments:
-	d		--
-	"""
-
-	from scipy.stats import linregress
-	x = []
-	y = []
-	for i in dm.range()[:-d]:
-		x.append(dm[dv][i])
-		y.append(dm[dv][i+d])
-	s, i, r, p, se = linregress(x, y)
-	print 'autoCorrelate(%s, %d): r = %.4f, p = %.4f' % (dv, d, r, p)
-	return r
-
-def autoCorrelateFull(dm):
-
-	"""
-	Determine the full auto-correlations for salFrom and pupilSize for various
-	displacements.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	for dv in ('salFrom', '_pupilSize'):
-		for d in range(1, 6):
-			r = autoCorrelate(dm, d=d, dv=dv)
-
-def corrPlot(dm, standalone=True, color=None, label=None):
-
-	"""
-	Plots the correlation between between pupil size and saliency.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	if color == None:
-		if analysis.exp == 'exp1':
-			color = exp1Col
-		elif analysis.exp == 'exp2':
-			color = exp2Col
-		else:
-			color = blue[1]
-	from scipy.stats import linregress
-	pupilSize = []
-	salFrom = []
-	for _dm in dm.group(['b__pupilSize', 'file']):
-		pupilSize.append(_dm['_pupilSize'].mean())
-		salFrom.append(_dm['salFrom'].mean())
-	s, i, r, p, se = linregress(pupilSize, salFrom)
-	if standalone:
-		plot.new(size=plot.s)
-	plt.xlim(-2, 2)
-	plt.ylim(0, 25)
-	plt.xlabel('Pupil size (norm.)')
-	plt.ylabel('Saliency (arbitrary units)')
-	plt.plot(pupilSize, salFrom, '.', color=color)
-	xData = np.array([min(pupilSize), max(pupilSize)])
-	yData = i+s*xData
-	plt.plot(xData, yData, '-', linewidth=2, color=color, label=label)
-	if standalone:
-		plot.save('corrPlot', show=True)
-
-def loadCorrPlot(dm):
-
-	"""
-	Plots the correlation between between pupil size and saliency separately
-	for the two load conditions in
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	assert(analysis.exp == 'exp3')
-	plot.new(size=plot.s)
-	corrPlot(dm.select('cond == "single"'), standalone=False, \
-		color=exp3SingleCol, label='Single task')
-	corrPlot(dm.select('cond == "dual"'), standalone=False, \
-		color=exp3DualCol, label='Dual task')
-	plt.legend(frameon=False)
-	plot.save('corrPlot', show=True)
-
-def pupilHist(dm, bins=100):
-
-	"""
-	Plots a pupil-size histogram.
-
-	Arguments:
-	dm		--	A DataMatrix.
-	"""
-
-	print 'Pupil size: %.2f (%.2f), range: %.2f = %.2f' \
-		% (dm['pupilSize'].mean(), dm['pupilSize'].std(), \
-		dm['pupilSize'].min(), dm['pupilSize'].max())
-
-	for _dm in dm.group('file'):
-		print '%s: %.2f (%.2f)' % (_dm['file'][0], _dm['pupilSize'].mean(), \
-			_dm['pupilSize'].std())
-
-	plot.new()
-	if analysis.exp == 'exp3':
-		plt.subplot(311)
-		plt.title('Pupil diameter')
-		plt.hist(dm['pupilDiam'], bins=bins, color=blue[1], histtype='stepfilled')
-		plt.subplot(312)
-		plt.title('Pupil area (converted)')
-	else:
-		plt.subplot(211)
-	plt.hist(dm['pupilSize'], bins=bins, color=blue[1], histtype='stepfilled')
-	if analysis.exp == 'exp3':
-		plt.subplot(313)
-	else:
-		plt.subplot(212)
-	colors = brightColors[:]*10
-	for _dm in dm.group('file'):
-		plt.hist(_dm['pupilSize'], bins=bins/2, color=colors.pop(), histtype='step')
-	plt.xlabel('pupil size')
-	#plt.xlim(0, 5000)
-	plot.save('pupilHist', show=True)
-
-# Sanity check
-if maxSacc != 20:
-	warnings.warn('For production, maxSacc should be set to 20 (is now %d)!' \
-		% maxSacc)
+		Plot.save('windowPlot', folder=exp, show=show)
