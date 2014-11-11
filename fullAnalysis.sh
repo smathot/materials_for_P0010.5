@@ -1,6 +1,5 @@
 #!/bin/bash
-rm -Rf output/*
-rm -Rf plot/*
+rm -Rf output/* plot/* .cache/*
 python analyze.py exp1 @exp1ModelBuild @exp1BestPupil @saccadePlot @windowPlot
 python analyze.py exp2 @exp2ModelBuild @saccadePlot @windowPlot
 python analyze.py exp1 @crossExpSaccadePlot

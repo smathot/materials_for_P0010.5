@@ -20,6 +20,7 @@ along with P0010.5.  If not, see <http://www.gnu.org/licenses/>.
 from constants import *
 from analysis import stats
 from exparser import Plot
+from exparser.CsvReader import CsvReader
 from exparser.Cache import cachedDataMatrix
 from matplotlib import pyplot as plt
 import numpy as np
