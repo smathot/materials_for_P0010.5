@@ -35,7 +35,7 @@ def exp3ModelBuild(dm):
 			type:	DataMatrix.
 	"""
 
-	assert(analysis.exp == 'exp3')
+	assert(exp == 'exp3')
 	modelRandomEffects = '(1|file)'
 	modelCandidateFixedEffects = stats.modelCandidateFixedEffects[:-1]
 

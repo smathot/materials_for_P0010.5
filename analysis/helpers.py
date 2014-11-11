@@ -239,7 +239,7 @@ def windowPlot(dm, standalone=True, color=blue[1], label=None):
 	plt.xticks(windowRange)
 	plt.xlim(windowRange[0], windowRange[-1])
 	plt.ylabel('Partial slope')
-	#plt.yticks([-.004, -0.002, 0])
-	#plt.ylim(-.006, .001)
+	plt.yticks([0, 1, 2, 3])
+	plt.ylim(-1, 4)
 	if standalone:
 		Plot.save('windowPlot', folder=exp, show=show)

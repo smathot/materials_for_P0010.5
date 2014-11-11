@@ -65,4 +65,4 @@ def crossExpWindowPlot(dm):
 	helpers.windowPlot(dm, standalone=False, color=constants.exp2Col,
 		label='Exp. 2')
 	plt.legend(frameon=False)
-	Plot.save('saccadePlot', folder='crossExp', show=constants.show)
+	Plot.save('windowPlot', folder='crossExp', show=constants.show)
