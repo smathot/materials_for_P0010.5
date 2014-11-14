@@ -63,7 +63,7 @@ def filter(dm):
 	# account PI. We can just square it and then turn it way down so the values
 	# don't become too high. There are also some artefacts in the pupil size
 	# measurements of exp 3, notably
-	dm = dm.selectByStdDev([], 'pupilSize', 3.)
+	dm = dm.selectByStdDev([], 'pupilSize', 3., verbose=True)
 	if pupilMode == 'area':
 		if exp == 'exp3':
 			dm = dm.addField('pupilDiam', dtype=np.float64)
@@ -179,8 +179,8 @@ def saccadePlot(dm, standalone=True, color=blue[1], label=None):
 	plt.xlim(-2, maxSacc+1)
 	plt.xticks([-1]+range(1, 21), ['Full']+range(1, 21))
 	plt.ylabel('Partial slope')
-	plt.yticks([0, 2, 4, 6])
-	plt.ylim(slopeLim)
+	plt.yticks(slopeTicks[exp])
+	plt.ylim(slopeLim[exp])
 	if standalone:
 		Plot.save('saccadePlot', folder=exp, show=show)
 
@@ -239,7 +239,7 @@ def windowPlot(dm, standalone=True, color=blue[1], label=None):
 	plt.xticks(windowRange)
 	plt.xlim(windowRange[0], windowRange[-1])
 	plt.ylabel('Partial slope')
-	plt.yticks([0, 1, 2, 3])
-	plt.ylim(-1, 4)
+	plt.yticks(slopeTicks[exp])
+	plt.ylim(slopeLim[exp])
 	if standalone:
 		Plot.save('windowPlot', folder=exp, show=show)

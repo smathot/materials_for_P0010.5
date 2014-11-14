@@ -22,7 +22,11 @@ import sys
 from exparser import Tools
 from analysis import helpers, helpersExp1, helpersExp2, helpersExp3, \
 	constants, helpersCrossExp
-dm = helpers.getDataMatrix(cacheId='data.%s' % constants.exp)
-dm = helpers.filter(dm, cacheId='filter.%s' % constants.exp)
+if constants.exp != None:
+	dm = helpers.getDataMatrix(cacheId='data.%s' % constants.exp)
+	dm = helpers.filter(dm, cacheId='filter.%s' % constants.exp)
+	print('N = %d' % len(dm))
+else:
+	dm = None
 Tools.analysisLoop(dm, mods=[helpers, helpersExp1, helpersExp2, helpersExp3,
 	helpersCrossExp])

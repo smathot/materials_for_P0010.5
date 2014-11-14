@@ -21,42 +21,46 @@ Analysis scripts, data, stimuli (where possible given license restrictions), sal
 
 # Linear mixed-effects models
 
-The procedure used to construct the linear mixed-effects models (LMM) is described in the main text. Because model slopes depend on the range of values that the predictor can take (i.e. a wide range leads to a shallow slope), we calculated the 'Absolute Normalized Slope' (ANS) as `|Slope x Std|`. Here, `Slope` corresponds to the LMM slopes listed in the tables below and `Std` corresponds to the standard deviation of the predictor across the full dataset. The ANS provides a rough indication of the effect size of the predictors, in the sense that the various slopes are cast into comparable normalized units. (But not in the sense that they directly reflect the reliability of the effect.)
-
-Across the three experiments, pupil size is one of the strongest predictors of fixation saliency, with only vertical fixation position being systematically more predictive (see %TblExp1Partial, %TblExp2Partial, and %TblExp3SinglePartial). (No full-LME model is shown for the dual-task condition of Exp. 3, because pupil size was not included in the preferred model.) The direct relationship (i.e. from a model with only pupil size as fixed effect) between pupil size and fixation saliency is shown for all experiments in %TblDirect. The direct relationships are comparable to the partial relationships, suggesting that the relationship between pupil size and fixation saliency is relatively independent of the other factors that were considered.
-
-Models were estimated using the `lmer()` function from the `lme4` [v0.999999-2, @Bates2014] package for R (v3.0.1).
+The procedure used to construct the linear mixed-effects models (LME) is described in the main text. Models were estimated using the `lmer()` function from the `lme4` [v1.0, @Bates2014] package for R (v3.0.2).
 
 %--
 table:
- id: TblExp1Partial
- source: exp1.partial.csv
+ id: TblExp1
+ source: exp1.csv
  caption:
-  The full LME for Exp. 1, used to estimate the partial slope of the relationship between pupil size and fixation saliency.
+  The LME for Exp. 1 used to estimate the partial slope of the relationship between pupil size and fixation saliency.
 --%
 
 %--
 table:
- id: TblExp2Partial
- source: exp2.partial.csv
+ id: TblExp2
+ source: exp2.csv
  caption:
-  The full LME for Exp. 2, used to estimate the partial slope of the relationship between pupil size and fixation saliency.
+  The LME for Exp. 2 used to estimate the partial slope of the relationship between pupil size and fixation saliency.
 --%
 
 %--
 table:
- id: TblExp3SinglePartial
- source: exp3.partial.single.csv
- caption: 
-  The full LME for the single-task condition of Exp. 3, used to estimate the partial slope of the relationship between pupil size and fixation saliency.
+ id: TblExp2Int
+ source: exp2.int.csv
+ caption:
+  The LME for Exp. 2, including effects of stimulus type, pupil size, and relevant interaction terms. Fractals are used as reference stimulus type. Free-viewing is used as reference task instruction.
 --%
 
 %--
 table:
- id: TblDirect
- source: direct.lme.csv
- caption: |
-  The direct slope of the relationship between pupil size and fixation saliency for Exp. 1, Exp. 2, Exp. 3 (single task), and Exp 3. (dual task). These slopes were estimated using a model with only pupil size as fixed effect.
+ id: TblExp3
+ source: exp3.csv
+ caption:
+  The LME for Exp. 3 used to estimate the partial slope of the relationship between pupil size and fixation saliency.
+--%
+
+%--
+table:
+ id: TblExp3Int
+ source: exp3.int.csv
+ caption:
+  The LME for Exp. 3, including the effects of task instruction and task instruction x pupil size interaction. Dual task is used as reference task instruction.
 --%
 
 # Relationship between luminance and saliency
@@ -66,7 +70,7 @@ It is well known that luminance is the primary determinant of pupil size [e.g., 
 %--
 figure:
  id: FigLumSal
- source: luminance-saliency.svg
+ source: FigLumSal.svg
  caption: |
   The correlation between visual saliency and luminance. Dots correspond to individual images. a) The 200 images used for Exp. 1 and 3. b) The 50 natural scenes used for Exp. 2. c) The 50 3D fractals used for Exp. 2.
 --%
@@ -75,30 +79,18 @@ However, it is also informative to directly consider the relation between lumina
 
 For our purpose, the crucial point to note is that the correlation between saliency and brightness is variable, and can be positive or negative depending on the specifics of the stimuli. However, the correlation between pupil size and saliency is invariably negative, and can therefore not be (fully) related to brightness.
 
-# Interactive analysis (Exp. 3)
+# Correlation between pupil size and saliency
 
-To avoid unmanageable complexity, and to reduce "researcher's degrees of freedom" [@Simmons2011Flexibility], we have used the same additive-model building algorithm for all main analyses (presented in the main text). However, there are multiple ways to analyze datasets such as the present, and we also conducted an exploratory interactive analysis for Exp. 3, to further test how the relationship between pupil size and fixation saliency is modulated by condition (single vs dual task).
-
-First, using the same method as before, we constructed an additive model using the full dataset from Exp. 3. Next, we added the pupil-size-by-condition interaction term to the model (%TblExp3IntPartial). Like before, we also created a minimal LME (for the direct relationship), which included only pupil size and the pupil-size-by-condition interaction as fixed effects (%TblExp3IntDirect). 
+For our main analyses, we report the LME slopes of the relationship between transformed pupil size and fixation saliency. This is statistically appropriate, because transforming pupil size increases statistical power, and using partial effects allows us to take into account that the data points (fixations) are not independent. However, it is also informative to simply consider the correlation between pupil size and fixation saliency to see what this relationship 'really' looks like. This is shown in %FigCorrelation. Fixation saliency is not normally distributed, but is dominated by 0 values, which makes the overall pattern difficult to appreciate visually. However, the negative correlation is visible as a slightly asymmetry in the heatmap of the 2D histogram.
 
 %--
-table:
- id: TblExp3IntPartial
- source: interaction.partial.csv
+figure:
+ id: FigCorrelation
+ source: FigCorrelation.svg
  caption: |
-  The full LME for Exp. 3, including the pupil-size by condition interaction term.
+  The correlation between pupil size and fixation saliency for Exp 1., Exp. 2, and the two conditions from Exp. 3. The heatmap corresponds to a 2D histogram, where white indicates a cell count of 0. The regression line corresponds to a linear regression.
 --%
 
-%--
-table:
- id: TblExp3IntDirect
- source: interaction.direct.csv
- caption: |
-  The minimal LME for Exp. 3, including the pupil-size by condition interaction term.
---%
+# Acknowledgements
 
-The difference between the partial (%TblExp3IntPartial) and direct (%TblExp3IntDirect) pupil-size-by-condition interaction is substantial. This suggests that some of the other predictors in the LME are also affected by condition, and also correlate with fixation saliency and pupil size. In an attempt to understand these correlations, we iteratively removed one predictor from the full LME, and, conversely, added it to the simplified LME. This revealed that the difference between the partial and direct interaction was largely due to two factors: trial number and fixation eccentricity. Below we provide a best guess of why this is, but we acknowledge that it is far from trivial to characterize these types of complex interactions.
-
-Firstly, as can be seen in %TblExp3IntPartial, trial number is positively related to fixation saliency. This likely reflects a fatigue effect: As the experiment progresses, participants grow tired, invest less mental effort in the task, and consequently fixate more salient locations. Fatigue also leads to a constriction of the pupil [@Lowenstein1963Fatigue]. Importantly, it appears that fatigue increases more in the dual-task than in the single-task condition, and trial number therefore captures some of the variance of the pupil-size-by-condition interaction. In other words, the addition of a dual task reduced the amount of mental effort invested in the visual-search also by increasing overall fatigue, and not only by 'redirecting' mental effort towards the primary task.
-
-Secondly, fixation eccentricity is negatively related to fixation saliency (%TblExp3IntPartial). This is because most photos are composed such that the more salient objects are in the center. Because of this composition bias, as well as other reasons [@Tatler2007], people look at the (salient) center of a photo more than at its edges. Consequently, there is a triadic relationship between fixation saliency, fixation eccentricity, and pupil size. Interestingly, the central fixation bias is larger in the dual-task than the single-task condition, reminiscent of the 'tunnel vision' that arises when drivers have a conversation on the phone [@NunesRecarte2002]. Therefore, fixation eccentricity captures some of the variance of the pupil-size-by-condition interaction. Although the central fixation bias is not our main focus, we note that the fact that it increases in the dual-task condition suggests that it is, at least in part, a default mode. Not unlike the tendency to fixate salient locations, the tendency to fixate the display center may be a default eye-movement behavior that participants fall back to when they do not invest much mental effort.
+%-- include: md/acknowledgements.md --%

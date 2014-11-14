@@ -42,6 +42,17 @@ def exp3ModelBuild(dm):
 	lfe = stats.modelBuild(dm, suffix='.full',
 		modelRandomEffects=modelRandomEffects,
 		modelCandidateFixedEffects=modelCandidateFixedEffects)
+
+	model = 'salFrom ~ %s + cond + (1+cond|file)' % (' + '.join(lfe))
+	lm = stats.R.lmer(model)
+	lm._print('Indirect model')
+	lm.save('output/exp3/model.cond.indirect.csv')
+
+	model = 'salFrom ~ cond + (1+cond|file)'
+	lm = stats.R.lmer(model)
+	lm._print('Direct model')
+	lm.save('output/exp3/model.cond.direct.csv')
+
 	model = 'salFrom ~ %s + pupilSize*cond + (1+pupilSize+cond|file)' \
 		% (' + '.join(lfe))
 	lm = stats.R.lmer(model)
@@ -55,7 +66,7 @@ def exp3ModelBuild(dm):
 
 	model = 'salFrom ~ %s + pupilSize + (1+pupilSize|file)' % (' + '.join(lfe))
 	lm = stats.R.lmer(model)
-	lm._print('Direct model')
+	lm._print('Indirect model')
 	lm.save('output/exp3/model.indirect.csv')
 
 	model = 'salFrom ~ pupilSize + (1+pupilSize|file)'

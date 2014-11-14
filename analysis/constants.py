@@ -25,7 +25,16 @@ maxSacc = 20
 # The range of displacements for `windowPlot()`
 windowRange = range(-5, 6)
 # The upper and lower limit for the slope axis in the plots
-slopeLim = -2, 7
+slopeLim = {
+	'exp1' : (-2, 7),
+	'exp2' : (-2, 7),
+	'exp3' : (-.5, 2),
+	}
+slopeTicks = {
+	'exp1' : [0, 2, 4, 6],
+	'exp2' : [0, 2, 4, 6],
+	'exp3' : [0, .5, 1, 1.5],
+	}
 # Line colors
 exp1Col = blue[1]
 exp2Col = orange[1]
@@ -40,6 +49,7 @@ pupilZTransform = True
 # Plot dimensions
 widePlot = 8, 4
 smallPlot = 4, 4
+bigPlot = 8, 8
 # Indicates whether the plots should be shown
 show = '--show' in sys.argv
 # The random effects part of the model
@@ -60,5 +70,8 @@ elif 'exp2' in sys.argv:
 elif 'exp3' in sys.argv:
 	exp = 'exp3'
 	w, h = 1280, 1024
+elif 'dummy' in sys.argv:
+	exp = None
+	w, h = None, None
 else:
 	raise Exception('You must specify an experiment!')

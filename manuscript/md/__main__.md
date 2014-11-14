@@ -37,4 +37,6 @@ correspondence:
 
 %-- include: "md/discussion.md" --%
 
+# Acknowledgements
 
+%-- include: "md/acknowledgements.md" --%
