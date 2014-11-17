@@ -15,6 +15,13 @@ correspondence:
  - France
 ---
 
+# Overview
+
+%--
+toc:
+ exclude: [Overview]
+--%
+
 # Materials
 
 Analysis scripts, data, stimuli (where possible given license restrictions), saliency maps, and luminance maps are available from <http://to.do/>.
@@ -28,7 +35,7 @@ table:
  id: TblExp1
  source: exp1.csv
  caption:
-  The LME for Exp. 1 used to estimate the partial slope of the relationship between pupil size and fixation saliency.
+  The LME for Exp. 1 used to estimate the partial slope of the relationship between pupil size and fixation saliency. Based on an LME model with by-participant random intercept and random slope for pupil size.
 --%
 
 %--
@@ -36,7 +43,7 @@ table:
  id: TblExp2
  source: exp2.csv
  caption:
-  The LME for Exp. 2 used to estimate the partial slope of the relationship between pupil size and fixation saliency.
+  The LME for Exp. 2 used to estimate the partial slope of the relationship between pupil size and fixation saliency. Based on an LME model with by-participant random intercept and random slope for pupil size.
 --%
 
 %--
@@ -44,7 +51,7 @@ table:
  id: TblExp2Int
  source: exp2.int.csv
  caption:
-  The LME for Exp. 2, including effects of stimulus type, pupil size, and relevant interaction terms. Fractals are used as reference stimulus type. Free-viewing is used as reference task instruction.
+  The LME for Exp. 2, including effects of stimulus type, task instruction, and relevant interaction terms. Fractals are used as reference stimulus type. Free-viewing is used as reference task instruction. Based on an LME model with by-participant random intercept and random slopes for pupil size, instruction, and stimulus type.
 --%
 
 %--
@@ -52,7 +59,7 @@ table:
  id: TblExp3
  source: exp3.csv
  caption:
-  The LME for Exp. 3 used to estimate the partial slope of the relationship between pupil size and fixation saliency.
+  The LME for Exp. 3 used to estimate the partial slope of the relationship between pupil size and fixation saliency. Based on an LME model with by-participant random intercept and random slope for pupil size.
 --%
 
 %--
@@ -60,12 +67,24 @@ table:
  id: TblExp3Int
  source: exp3.int.csv
  caption:
-  The LME for Exp. 3, including the effects of task instruction and task instruction x pupil size interaction. Dual task is used as reference task instruction.
+  The LME for Exp. 3, including the effects of condition and condition x pupil size interaction. Dual task is used as reference condition. Based on an LME model with by-participant random intercept and random slopes for pupil size and condition.
+--%
+
+# Pupil-size transformations
+
+%TblTransform lists the Akaike's Information Criterion (AIC) values of the LME models for different pupil-size transformations. Low AIC values are better. The model shown in %TblExp1 corresponds to the *D*^-1^ model. Strikingly, transformations that reduces positive skewness work better than transformations that introduce positive skewness. Pupil-size area (*D*^2^), which we and others have frequently used as dependent measure [@Mathôt2013Plos;@Mathôt2014JVis;@Mathôt2014JExpPsy], is clearly suboptimal, at least for the present purpose.
+
+%--
+table:
+ id: TblTransform
+ source: transform.csv
+ caption: |
+  Akaike's Information Criterion (AIC) values of LME models with different pupil-size transformations.
 --%
 
 # Relationship between luminance and saliency
 
-It is well known that luminance is the primary determinant of pupil size [e.g., @Ellis1981]: The pupil constricts when looking at, or even attending to [@Binda2013Neurosci;@Mathôt2013Plos], bright surfaces. Therefore, if luminance were consistently and positively correlated with visual saliency, and if this were not controlled for, a pupillary light response might fully explain our results. Our primary way to control for this potential confound is by estimating pupillary luminance maps, and entering values from these maps as fixed effects into the models, as described above and in the main text.
+It is well known that luminance is the primary determinant of pupil size [e.g., @Ellis1981]: The pupil constricts when looking at, or even attending to [@Binda2013Neurosci;@Mathôt2013Plos], bright surfaces. Therefore, if luminance were consistently and positively correlated with visual saliency, and if this were not controlled for, a pupillary light response might fully explain our results. Our primary way to control for this potential confound is by estimating pupillary luminance maps, and entering values from these maps as control predictor into the models, as described above and in the main text.
 
 %--
 figure:
@@ -77,11 +96,13 @@ figure:
 
 However, it is also informative to directly consider the relation between luminance and saliency, in order to dispel any lingering suspicion that this may have confounded our results. As can be seen in %FigLumSal (see also the factor 'Fixation luminance' in Tables 1-3), the direction of this correlation varies widely from image to image, and also between the different image sets. (The values on the x-axis indicate the correlation coefficient between saliency and luminance values for the same pixel, separately for each image.) For the photos from the UPenn natural image database [@Tkačik2011], there was a weak negative correlation (a two-sided one-sample t-test against 0 on the correlation coefficients for each image: M = -.059, SE = .023, t(199) = 2.580, p = .011). This may reflect the fact that the primary source of brightness in the savanna is the sky, which is not very salient. For the images from the Campus Scene collection [@BurgeGeisler2011], there was a moderate positive correlation (M = .338, SE = 0.032, t(49) = 10.420, p < .001). This presumably reflects the fact that these images were taken in an urbanized environment, where bright lights are a dominant source of saliency. For the 3D Mandelbulber-generated fractals [@Marczak2012], there was also a moderate positive correlation (M = 0.272, SE = 0.043, t(49) = 6.259, p < 0.001), presumably due to the use of virtual light sources.
 
-For our purpose, the crucial point to note is that the correlation between saliency and brightness is variable, and can be positive or negative depending on the specifics of the stimuli. However, the correlation between pupil size and saliency is invariably negative, and can therefore not be (fully) related to brightness.
+For our purpose, the crucial point to note is that the correlation between saliency and brightness is variable, and can be positive or negative depending on the specifics of the stimuli. However, the correlation between pupil size and saliency is invariably negative (or positive when using an inverse transformation), and can therefore not be (fully) related to brightness.
 
 # Correlation between pupil size and saliency
 
-For our main analyses, we report the LME slopes of the relationship between transformed pupil size and fixation saliency. This is statistically appropriate, because transforming pupil size increases statistical power, and using partial effects allows us to take into account that the data points (fixations) are not independent. However, it is also informative to simply consider the correlation between pupil size and fixation saliency to see what this relationship 'really' looks like. This is shown in %FigCorrelation. Fixation saliency is not normally distributed, but is dominated by 0 values, which makes the overall pattern difficult to appreciate visually. However, the negative correlation is visible as a slightly asymmetry in the heatmap of the 2D histogram.
+For our main analyses, we report the LME slopes of the relationship between transformed pupil size and fixation saliency (see also the tables above). This is statistically appropriate, because transforming pupil size increases statistical power, and LME models allow us to take into account that the data points (fixations) are not independent. However, it is also informative to simply consider the correlation between pupil size and fixation saliency to see what this relationship 'really' looks like. Fancy statistics aside, is this negative relationship actually in the data?
+
+The correlation between pupil size and fixation saliency is shown in %FigCorrelation. It clear that fixation saliency is not normally distributed, but is dominated by 0 values (see also main-text Figure 1c). This and the large variability make the overall pattern difficult to appreciate visually. However, the negative correlation is visible as a slightly asymmetry in the heatmap of the 2D histograms, and is also robust when expressed as a correlation.
 
 %--
 figure:

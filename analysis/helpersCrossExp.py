@@ -101,7 +101,7 @@ def simpleContour(dm, bins=75, title=''):
 	plt.plot(xe, yfit, '--', color='black', linewidth=1)
 	plt.xlim(-2.5, 2.5)
 	plt.ylim(0, 255)
-	plt.xlabel('Pupil size (1/diameter)')
+	plt.xlabel('Pupil size (Z)')
 	plt.ylabel('Fixation saliency (arbitrary units)')
 	plt.title(title + ' (r=%.4f, p=%.4f)' % (r, p))
 
