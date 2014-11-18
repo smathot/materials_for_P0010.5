@@ -72,7 +72,7 @@ table:
 
 # Pupil-size transformations
 
-%TblTransform lists the Akaike's Information Criterion (AIC) values of the LME models for different pupil-size transformations. Low AIC values are better. The model shown in %TblExp1 corresponds to the *D*^-1^ model. Strikingly, transformations that reduces positive skewness work better than transformations that introduce positive skewness. Pupil-size area (*D*^2^), which we and others have frequently used as dependent measure [@Mathôt2013Plos;@Mathôt2014JVis;@Mathôt2014JExpPsy], is clearly suboptimal, at least for the present purpose.
+%TblTransform lists the Akaike's Information Criterion (AIC) values of the LME models for different pupil-size transformations. Low AIC values are better. The model shown in %TblExp1 corresponds to the *D*^-1^ model. Strikingly, transformations that reduce positive skewness work better than transformations that introduce positive skewness. Pupil-size area (*D*^2^), which we and others have frequently used as dependent measure [@Mathôt2013Plos;@Mathôt2014JVis;@Mathôt2014JExpPsy], is clearly suboptimal, at least for the present purpose.
 
 %--
 table:
@@ -102,7 +102,7 @@ For our purpose, the crucial point to note is that the correlation between salie
 
 For our main analyses, we report the LME slopes of the relationship between transformed pupil size and fixation saliency (see also the tables above). This is statistically appropriate, because transforming pupil size increases statistical power, and LME models allow us to take into account that the data points (fixations) are not independent. However, it is also informative to simply consider the correlation between pupil size and fixation saliency to see what this relationship 'really' looks like. Fancy statistics aside, is this negative relationship actually in the data?
 
-The correlation between pupil size and fixation saliency is shown in %FigCorrelation. It clear that fixation saliency is not normally distributed, but is dominated by 0 values (see also main-text Figure 1c). This and the large variability make the overall pattern difficult to appreciate visually. However, the negative correlation is visible as a slightly asymmetry in the heatmap of the 2D histograms, and is also robust when expressed as a correlation.
+The correlation between pupil size and fixation saliency is shown in %FigCorrelation. It clear that fixation saliency is not normally distributed, but is dominated by 0 values (see also main-text Figure 1c). This and the large variability make the overall pattern difficult to appreciate visually. However, the negative correlation is visible as a slightly asymmetry in the heatmap of the 2D histograms, and is consistently present when expressed as a simple correlation. We present %FigCorrelation only to provide an illustration of the type of data that our analyses are based on, not because correlations are appropriate for our purpose.
 
 %--
 figure:
