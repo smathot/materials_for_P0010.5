@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with P0010.5.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from exparser import Plot
+from matplotlib import pyplot as plt
 from analysis.constants import *
 from analysis import stats
 import numpy as np
@@ -82,3 +84,32 @@ def exp1ModelBuild(dm):
 	lm = stats.R.lmer(model)
 	lm._print('Direct model')
 	lm.save('output/exp1/model.direct.csv')
+
+def exp1RegressionPlot(dm):
+	
+	"""
+	desc:
+		Creates a demo plot in which fixation saliency is shown as a function
+		of pupil size.
+		
+	arguments:
+		dm:
+			type:	DataMatrix.		
+	"""
+
+	Plot.new(size=smallPlot)
+	lX = []
+	lY = []
+	for _dm in dm.group('b__pupilSize'):	
+		lX.append(_dm['_pupilSize'].mean())
+		lY.append(_dm['salFrom'].mean())
+		
+	aX = np.array(lX)
+	aY = np.array(lY)
+	plt.plot(aX, aY, 'o-', color=exp1Col)
+	plt.xlabel('Pupil diameter (Z score)')
+	plt.ylabel('Fixation saliency (arbitrary units)')
+	plt.xlim(-2, 2)
+	plt.xticks([-2, -1, 0, 1, 2])
+	plt.ylim(14, 20)
+	Plot.save('exp1RegressionPlot', folder='exp1')
