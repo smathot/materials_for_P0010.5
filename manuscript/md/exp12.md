@@ -1,10 +1,14 @@
 ## Method
 
+### Materials and availability
+
+All experimental materials, where possible given license restrictions, are available from <https://github.com/smathot/materials_for_P0010.5>.
+
 ### Datasets, participants, procedure, and apparatus
 
 We analyzed data from two previously unpublished experiments that were conducted for a different purpose. Data were independently collected and contained a mixture of different trial types. From Exp. 1 we analyzed only trials without any visible manipulation to the display (16 participants; 100 trials per participant). Exp. 1 was a difficult visual search task, in which participants searched for a small letter ('Z' or 'H'; 0.4°x0.4°) embedded in a natural scene. From Exp. 2, we analyzed all trials, which were a mixture of three task instructions (16 participants; 100 trials per participant; instruction varied between participants): A visual-search task, as in Exp. 1; A memory task, in which participants were (falsely) informed that they would be asked questions about the images; And a free-viewing task, in which no instructions were given. Eye movements were unconstrained.
 
-Although the experiments were conducted at different locations, a similar experimental set-up was used. Eye movements were recorded monocularly with an EyeLink 1000, a video-based eye tracker sampling at 1000 Hz (SR Research, Mississauga, ON, Canada). Stimulus presentation was controlled by OpenSesame [@MathôtSchreijTheeuwes2012] using the PsychoPy back-end [@Peirce2007]. Observers participated in the experiments for course credit or money, reported normal or corrected vision, and signed a written consent form. The experiments were conducted with approval of the Ethics Board of the Faculty of Psychology and Education (VCWE; Exp. 1) and the local ethics committee of Aix-Marseille université (Exp. 2).
+Although the experiments were conducted at different locations, a similar experimental set-up was used. Eye movements were recorded monocularly with an EyeLink 1000, a video-based eye tracker sampling at 1000 Hz (SR Research, Mississauga, ON, Canada). Stimulus presentation was controlled by OpenSesame [@MathôtSchreijTheeuwes2012] using the PsychoPy back-end [@Peirce2007]. Observers participated in the experiments for course credit or money, reported normal or corrected vision, and signed a written consent form. The experiments were conducted with approval of the Ethics Board of the Faculty of Psychology and Education (VCWE; Exp. 1) and the local ethics committee of Aix-Marseille Université (Exp. 2).
 
 ### Stimuli, saliency maps, and pupillary luminance maps
 
@@ -36,7 +40,7 @@ Here *s* is pupil sensitivity (dB; a measure of the pupillary response to the li
 
 ### Model selection
 
-Like any set of free-viewing eye-movement data, our datasets contain many correlations that need to be taken into account when interpreting a relationship of interest, in our case between pupil size and the saliency of fixated locations (from now on: fixation saliency). For example, if high-salient locations would be brighter than low-salient locations, a light response would manifest itself as a pupillary constriction when fixating high-salient locations. (This is merely an example, see Supplementary Methods for the actual relationship between saliency and luminance.)
+Like any set of data with unconstrained eye movements, our datasets contain many correlations that need to be taken into account when interpreting a relationship of interest, in our case between pupil size and the saliency of fixated locations (from now on: fixation saliency). For example, if high-salient locations would be brighter than low-salient locations, a light response would manifest itself as a pupillary constriction when fixating high-salient locations. (This is merely an example, see Supplementary Methods for the actual relationship between saliency and luminance.)
 
 To deal with these correlations, we focus on the 'partial' relationship between pupil size and fixation saliency, i.e. the slope of the effect in a linear-mixed effects (LME) model that accounts for several other factors that might co-vary with pupil size. We used a combination of a data-driven and a confirmatory approach, in which we selected control predictors in a data-driven way, and used confirmatory testing for the effects of interest [see @Barr2013 for guidelines and a discussion].
 

@@ -22,13 +22,13 @@ toc:
  exclude: [Overview]
 --%
 
-# Materials
+# Materials and availability
 
-Analysis scripts, data, stimuli (where possible given license restrictions), saliency maps, and luminance maps are available from <http://to.do/>.
+All experimental materials, where possible given license restrictions, are available from <https://github.com/smathot/materials_for_P0010.5>.
 
 # Linear mixed-effects models
 
-The procedure used to construct the linear mixed-effects models (LME) is described in the main text. Models were estimated using the `lmer()` function from the `lme4` [v1.0, @Bates2014] package for R (v3.0.2).
+The procedure used to construct the linear mixed-effects models (LME) is described in the main text. Models were estimated using the `lmer()` function from the `lme4` [v1.0, @Bates2014] package for R (v3.0.2). In all models reported below, fixation saliency is the dependent variable, using the units provided by the saliency-map algorithm (range: 0-255). The reference value for continuous variables is 0.
 
 %--
 table:

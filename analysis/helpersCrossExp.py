@@ -141,11 +141,11 @@ def crossExpDescriptives(dm):
 		dm = CsvReader('data/%s.data.csv' % exp).dataMatrix()
 		if exp == 'exp1':
 			dm = dm.select('trialType == "control"')
-		#elif exp == 'exp3':
-			#print dm.collapse(['cond'], 'rt')
-			#stats.R.load(dm)
-			#lm = stats.R.lmer('rt ~ cond + (1+cond|subject_nr)')
-			#print lm
+		elif exp == 'exp3':
+			print dm.collapse(['cond'], 'rt')
+			stats.R.load(dm)
+			lm = stats.R.lmer('rt ~ cond + (1+cond|subject_nr)')
+			print lm
 		rt = dm['rt']
 		print 'Exp = %s' % exp
 		print 'N = %d' % len(rt)
